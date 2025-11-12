@@ -1,0 +1,17 @@
+# 核心依赖
+opencv-python>=4.5.0
+numpy>=1.19.0
+pyserial>=3.5
+torch>=1.7.0
+torchvision>=0.8.0
+PyYAML>=5.4.0
+scipy>=1.5.0
+
+# 可选依赖（用于模型转换等）
+onnx>=1.8.0
+onnxruntime>=1.7.0
+tensorrt>=7.0.0  # 如果使用TensorRT加速
+
+# 其他工具包
+pillow>=8.0.0
+matplotlib>=3.3.0  # 用于调试和可视化
