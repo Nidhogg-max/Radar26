@@ -1086,7 +1086,7 @@ while True:
                         if result2:  
                             armor_class, class_conf = result2[0]  
                             
-                            # === 修改开始：解析分类结果格式 ===
+                            # === 解析分类结果格式 ===
                             # armor_class 可能是 "B1", "R2", "BS", "RS" 等格式
                             camp_from_cls = ""
                             num_from_cls = ""
@@ -1188,9 +1188,9 @@ while True:
     # 使用跟踪管理器更新跟踪器
     tracked_positions = tracking_manager.update(detections_primary)
     
-    # 在地图上绘制敌方机器人
+    # 在地图上绘制敌方单位
     for robot_id, (x, y) in tracked_positions.items():
-        # 检查是否为敌方机器人
+        # 检查是否为敌方单位
         if (STATE == 'R' and robot_id.startswith('B')) or \
            (STATE == 'B' and robot_id.startswith('R')):
             
