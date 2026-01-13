@@ -4,7 +4,8 @@
 
 ### 1. 两级目标检测
 - **第一级：车体检测** - 识别战场上的所有机器人车体
-- **第二级：装甲板检测** - 在车体区域内识别装甲板编号（R1, B2等）
+- **第二级：装甲板检测** - 在车体区域内识别装甲板
+- **第二级：数字分类** - 对车体种类进行区分
 
 ### 2. 多高度层坐标转换
 - **地面层** - 黑色掩码区域
@@ -50,6 +51,11 @@ for car_detection in detections:
         cropped = image[top:top+h, left:left+w]
         # 检测装甲板
         armor_detections = detector_next.predict(cropped)
+
+# 第三级：数字分类
+if result2:  
+    armor_class, class_conf = result2[0]
+    ......  
 
 # 三层仿射变换
 # 1. 地面层转换

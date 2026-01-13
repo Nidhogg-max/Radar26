@@ -1,6 +1,7 @@
 """
-RoboMaster 视觉识别系统  主程序
+RoboMaster 
 集成匈牙利算法（数据关联）和卡尔曼滤波（状态估计）
+三层神经网络检测：车体 → 装甲板 → 数字分类
 """
 
 import math
@@ -22,8 +23,8 @@ try:
     import information_ui
     draw_information_ui = information_ui.draw_information_ui
     
-    # 导入检测模块
-    from detect_function_yolov11 import YOLOv11Detector
+    # 导入检测模块（包含检测器和分类器）
+    from detect_function_yolov11 import YOLOv11Detector, YOLOv11Classifier
     
     # 导入串口模块
     from RM_serial_py.ser_api import (
@@ -46,6 +47,12 @@ except ImportError as e:
         def __init__(self, *args, **kwargs):
             pass
         def predict(self, img):
+            return []
+    
+    class YOLOv11Classifier:
+        def __init__(self, *args, **kwargs):
+            pass
+        def predict(self, img, top_k=1):
             return []
     
     SERIAL_MODULE_AVAILABLE = False
@@ -797,13 +804,12 @@ def ser_receive():
         time.sleep(0.1)
 
 # ==================== 坐标转换函数 ====================
-def image_to_map_coordinates(x: float, y: float, cls: str) -> Tuple[float, float, str]:
+def image_to_map_coordinates(x: float, y: float) -> Tuple[float, float, str]:
     """
     将图像坐标转换为地图坐标
     
     参数:
         x, y: 图像坐标（装甲板中心下沿）
-        cls: 机器人类别
         
     返回:
         (x_map, y_map, height_layer)
@@ -866,13 +872,12 @@ def image_to_map_coordinates(x: float, y: float, cls: str) -> Tuple[float, float
 # 初始化跟踪管理器
 tracking_manager = TrackingManager()
 
-# 加载YOLOv11模型
+# 加载三层神经网络模型
 try:
-    weights_path = 'models/car.engine' if os.path.exists('models/car.engine') else 'models/car.onnx'
-    weights_path_next = 'models/armor.engine' if os.path.exists('models/armor.engine') else 'models/armor.onnx'
-    
-    detector = YOLOv11Detector(
-        weights_path=weights_path,
+    # 第一阶段：车体检测器
+    stage1_weights = 'modelEEE/car_best.engine' if os.path.exists('modelEEE/car_best.engine') else 'modelEEE/car_best.onnx'
+    stage1_detector = YOLOv11Detector(
+        weights_path=stage1_weights,
         img_size=640,
         conf_thres=0.1,
         iou_thres=0.5,
@@ -881,21 +886,36 @@ try:
         ui=True
     )
     
-    detector_next = YOLOv11Detector(
-        weights_path=weights_path_next,
+    # 第二阶段：装甲板检测器
+    stage2_weights = 'modelEEE/armor_best.engine' if os.path.exists('modelEEE/armor_best.engine') else 'modelEEE/armor_best.onnx'
+    stage2_detector = YOLOv11Detector(
+        weights_path=stage2_weights,
         img_size=640,
         conf_thres=0.4,
         iou_thres=0.2,
-        max_det=1,
+        max_det=5,
         data='yaml/armor.yaml',
         ui=True
     )
-    print("YOLOv11模型加载成功")
+    
+    # 第三阶段：装甲板数字分类器
+    stage3_weights = 'modelEEE/cls_best.engine' if os.path.exists('modelEEE/cls_best.engine') else 'modelEEE/cls_best.onnx'
+    stage3_classifier = YOLOv11Classifier(
+        weights_path=stage3_weights,
+        img_size=224,
+        data='yaml/armor_classify.yaml'
+    )
+    
+    print("三层神经网络模型加载成功")
+    print(f"  - 车体检测器: {stage1_weights}")
+    print(f"  - 装甲板检测器: {stage2_weights}")
+    print(f"  - 数字分类器: {stage3_weights}")
 except Exception as e:
     print(f"模型加载失败: {e}")
     print("将使用模拟检测器")
-    detector = YOLOv11Detector('')
-    detector_next = YOLOv11Detector('')
+    stage1_detector = YOLOv11Detector('')
+    stage2_detector = YOLOv11Detector('')
+    stage3_classifier = YOLOv11Classifier('')
 
 # 初始化串口
 ser1 = None
@@ -991,6 +1011,7 @@ if SAVE_IMG:
 print("=" * 50)
 print("RoboMaster 雷达视觉系统启动")
 print(f"阵营: {STATE}, 相机模式: {camera_mode}")
+print("三层神经网络检测流程：车体 → 装甲板 → 数字分类")
 print("=" * 50)
 
 frame_count = 0
@@ -1024,54 +1045,145 @@ while True:
         resized_raw = cv2.resize(img0, (1300, 900))
         video_writer_raw.write(resized_raw)
     
-    # 第一层神经网络识别（车体检测）
+    # 三层神经网络检测
     detections_primary = []
+    det_time = 0
+    
     try:
-        result0 = detector.predict(img0)
+        # 第一阶段：车体检测
+        result0 = stage1_detector.predict(img0)  
+        det_time += 1  
         
-        for detection in result0:
-            cls, xywh, conf = detection
-            if cls == 'car':
-                left, top, w, h = xywh
-                left, top, w, h = int(left), int(top), int(w), int(h)
-                
-                # 存储检测结果
-                detections_primary.append((cls, (left, top, w, h), conf))
-                
-                # ROI出机器人区域
-                cropped = camera_image[top:top + h, left:left + w]
-                cropped_img = np.ascontiguousarray(cropped)
-                
-                # 第二层神经网络识别（装甲板检测）
-                result_n = detector_next.predict(cropped_img)
-                
-                if result_n:
-                    # 叠加第二次检测结果到原图的对应位置
-                    img0[top:top + h, left:left + w] = cropped_img
-                    
-                    for detection1 in result_n:
-                        cls_armor, xywh_armor, conf_armor = detection1
-                        if cls_armor and cls_armor in ['R1', 'R2', 'R3', 'R4', 'R5', 'R7', 
-                                                      'B1', 'B2', 'B3', 'B4', 'B5', 'B7']:
-                            x_armor, y_armor, w_armor, h_armor = xywh_armor
-                            x_armor = x_armor + left
-                            y_armor = y_armor + top
+        for robot_det in result0:  
+            cls, robot_xywh, robot_conf = robot_det  
+            if cls == 'car':  
+                robot_left, robot_top, robot_w, robot_h = map(int, robot_xywh)  
+        
+                cropped = camera_image[robot_top:robot_top + robot_h, robot_left:robot_left + robot_w]  
+                cropped_img = np.ascontiguousarray(cropped)  
+        
+                # 第二阶段：装甲板检测
+                result1 = stage2_detector.predict(cropped_img)  
+                det_time += 1  
+        
+                # 将第二阶段处理后的机器人ROI覆盖回原图  
+                if result1:  
+                    # 注意：这里的cropped_img可能已经被第二阶段检测器修改（如果检测器内部进行了可视化）  
+                    img0[robot_top:robot_top + robot_h, robot_left:robot_left + robot_w] = cropped_img  
+        
+                for armor_det in result1:  
+                    armor_cls, armor_xywh, armor_conf = armor_det  
+                    if armor_cls in ['armor_red', 'armor_blue', 'armor_other']:  
+                        armor_left, armor_top, armor_w, armor_h = map(int, armor_xywh)  
+        
+                        cropped_2 = cropped_img[armor_top:armor_top + armor_h, armor_left:armor_left + armor_w]  
+                        cropped_img_2 = np.ascontiguousarray(cropped_2)  
+        
+                        # 第三阶段：装甲板数字分类
+                        result2 = stage3_classifier.predict(cropped_img_2, top_k=1)  
+                        det_time += 1  
+        
+                        if result2:  
+                            armor_class, class_conf = result2[0]  
+                            
+                            # === 修改开始：解析分类结果格式 ===
+                            # armor_class 可能是 "B1", "R2", "BS", "RS" 等格式
+                            camp_from_cls = ""
+                            num_from_cls = ""
+                            
+                            # 解析格式
+                            if isinstance(armor_class, str) and len(armor_class) >= 2:
+                                camp_from_cls = armor_class[0]  # 第一个字符：阵营（B/R）
+                                num_from_cls = armor_class[1:]  # 剩余字符：数字或标识
+                            else:
+                                # 如果格式不符合预期，尝试转换
+                                armor_class_str = str(armor_class)
+                                if len(armor_class_str) >= 2:
+                                    camp_from_cls = armor_class_str[0]
+                                    num_from_cls = armor_class_str[1:]
+                                else:
+                                    # 无法解析，使用默认值
+                                    camp_from_cls = "X"
+                                    num_from_cls = "0"
+                            
+                            # 处理数字标识
+                            # 哨兵(S)映射为7号
+                            if num_from_cls == "S":
+                                robot_num = "7"
+                            elif num_from_cls.isdigit():
+                                robot_num = num_from_cls
+                            elif num_from_cls == "0":
+                                robot_num = "0"
+                            else:
+                                # 无法识别的标识，设为0
+                                robot_num = "0"
+                            
+                            # 确定机器人ID前缀
+                            # 优先使用分类器识别的阵营
+                            if camp_from_cls == "R":
+                                robot_id_prefix = "R"
+                            elif camp_from_cls == "B":
+                                robot_id_prefix = "B"
+                            else:
+                                # 分类器未识别出阵营，使用装甲板颜色
+                                if armor_cls == 'armor_red':
+                                    robot_id_prefix = 'R'
+                                elif armor_cls == 'armor_blue':
+                                    robot_id_prefix = 'B'
+                                else:
+                                    robot_id_prefix = 'X'
+                            
+                            # 生成机器人ID
+                            robot_id = f"{robot_id_prefix}{robot_num}"
+                            
+                            # 调试输出
+                            print(f"检测到: 装甲板={armor_cls}, 分类结果={armor_class}, 阵营={camp_from_cls}, 数字={num_from_cls}, 机器人ID={robot_id}, 置信度={class_conf:.2f}")
+        
+                            # 将装甲板坐标转换到原始图像坐标  
+                            armor_abs_x = robot_left + armor_left  
+                            armor_abs_y = robot_top + armor_top  
+        
+                            # 在原始图像上绘制装甲板  
+                            if armor_cls == 'armor_red':  
+                                color = (0, 0, 255)  # 红色  
+                            elif armor_cls == 'armor_blue':  
+                                color = (255, 0, 0)  # 蓝色  
+                            else:  
+                                color = (0, 255, 0)  # 绿色  
+        
+                            # 绘制装甲板边界框  
+                            cv2.rectangle(img0,  
+                                          (armor_abs_x, armor_abs_y),  
+                                          (armor_abs_x + armor_w, armor_abs_y + armor_h),  
+                                          color, 2)  
+        
+                            # 绘制装甲板数字和置信度  
+                            label = f"{armor_cls.replace('armor_', '')}:{armor_class} {class_conf:.2f}"  
+                            cv2.putText(img0, label,  
+                                        (armor_abs_x, armor_abs_y - 5),  
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                            
+                            # 计算装甲板中心下沿坐标（用于坐标转换）
+                            armor_center_x = armor_abs_x + armor_w / 2
+                            armor_center_y = armor_abs_y + armor_h
                             
                             # 坐标转换：图像坐标 -> 地图坐标
                             x_map, y_map, height_layer = image_to_map_coordinates(
-                                x_armor + w_armor/2, 
-                                y_armor + h_armor,
-                                cls_armor
+                                armor_center_x, 
+                                armor_center_y
                             )
                             
                             # 添加到检测结果（用于跟踪）
+                            # 这里使用解析后的robot_id
                             detections_primary.append((
-                                cls_armor, 
+                                robot_id, 
                                 (x_map, y_map, 30, 30),  # 简化框
-                                conf_armor
+                                class_conf
                             ))
     except Exception as e:
         print(f"检测错误: {e}")
+        import traceback
+        traceback.print_exc()
     
     # 使用跟踪管理器更新跟踪器
     tracked_positions = tracking_manager.update(detections_primary)
@@ -1137,6 +1249,8 @@ while True:
                 (10, 380), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
     cv2.putText(information_ui_show, f"Frame: {frame_count}",
                 (10, 410), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+    cv2.putText(information_ui_show, f"Det Time: {det_time}",
+                (200, 380), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
     
     # 显示图像
     map_show = cv2.resize(map_display, (600, 320))
@@ -1160,13 +1274,13 @@ while True:
     
     # 显示FPS
     avg_fps = 1.0 / (sum(fps_history) / len(fps_history)) if fps_history else 0
-    fps_text = f"FPS: {avg_fps:.1f} | Trackers: {len(tracked_positions)}"
+    fps_text = f"FPS: {avg_fps:.1f} | Trackers: {len(tracked_positions)} | Det Time: {det_time}"
     cv2.putText(img0_show, fps_text, (10, 30), 
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     
     # 显示算法状态
-    algo_text = "KF+HA"  # 卡尔曼滤波+匈牙利算法
-    cv2.putText(img0_show, algo_text, (img0_show.shape[1] - 150, 30),
+    algo_text = "3-Stage NN + KF + HA"
+    cv2.putText(img0_show, algo_text, (img0_show.shape[1] - 300, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
     
     # 按键处理
