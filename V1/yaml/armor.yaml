@@ -1,0 +1,12 @@
+# data.yaml
+path: /root/autodl-tmp/RM2025-Armor-Public-Dataset  # 数据集路径
+train: .  # 训练集路径（当前目录）
+val: .    # 验证集路径（使用同一目录）
+
+# 类别信息（需要根据您的标注文件内容填写）
+names:
+  0: armor_red  # 红色装甲板
+  1: armor_blue # 蓝色装甲板
+  2: armor_other # 其他装甲板
+
+nc: 3  # 类别数量（根据实际情况修改）
