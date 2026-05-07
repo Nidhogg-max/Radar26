@@ -2,7 +2,7 @@
 
 ![Platform](https://img.shields.io/badge/platform-Linux--x86__64-blue)
 ![Python](https://img.shields.io/badge/Python-3.8%2B-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 ![Status](https://img.shields.io/badge/status-competition--ready-red)
 
 > 基于海康工业相机（兼容 USB 相机）的 RoboMaster 雷达站上位机系统。  
@@ -123,6 +123,7 @@ Radar26_Final/
 │   ├── RM_serial_py/             # 串口通信子模块
 │   ├── MvImport_Linux/           # 海康相机 Linux SDK 封装
 │   └── MvImport/                 # 海康相机 Windows SDK 封装
+├── LICENSE                       # Apache License 2.0
 └── README.md                     # 本文件
 ```
 
@@ -326,16 +327,16 @@ python3 onnx2engine.py
 
 ## 许可证
 
-本项目采用 [MIT License](LICENSE) 开源，第三方组件（Ultralytics、海康机器人 SDK 等）遵循各自许可协议。
+本项目采用 Apache License 2.0 开源，第三方组件（Ultralytics、海康机器人 SDK 等）遵循各自许可协议。
 
 ---
 
 ## 致谢
 
 - [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) 提供强大的目标检测与分类框架。
-- 海康机器人提供工业相机 SDK 及技术支持。
-- 项目灵感来源于 RoboMaster 官方开源资料与社区贡献者的经验分享。
-- 感谢全体团队成员在算法设计、硬件调试与赛场测试中的不懈努力。
+- 海康机器人提供工业相机SDK及技术支持。
+- 项目灵感来源于RoboMaster官方开源资料与社区贡献者的经验分享。
+- 感谢全体NEXT-E团队成员在算法设计、硬件调试与赛场测试中的不懈努力。
 
 ---
 
