@@ -1,4 +1,4 @@
-```markdown
+
 # Radar26 Final · 面向 RoboMaster 2026 赛季的全自动雷达视觉与决策辅助系统
 
 ![Platform](https://img.shields.io/badge/platform-Linux--x86__64-blue)
