@@ -26,9 +26,8 @@
 7. [模型训练与 TensorRT 导出](#模型训练与-tensorrt-导出)  
 8. [辅助工具与脚本](#辅助工具与脚本)  
 9. [串口通信协议](#串口通信协议)  
-10. [运行截图与调试](#运行截图与调试)  
-11. [许可证](#许可证)  
-12. [致谢](#致谢)  
+10. [许可证](#许可证)  
+11. [致谢](#致谢)  
 
 ---
 
@@ -218,7 +217,7 @@ GAME_DIR = "game1"              # 录像文件夹名称
 
 ```bash
 cd V1
-python main.py
+python3 main.py
 ```
 
 运行后将弹出四个 OpenCV 窗口：
@@ -276,7 +275,7 @@ python main.py
 
 2. **启动训练**  
    ```bash
-   python train.py
+   python3 train.py
    ```
    可在 `train.py` 中调整 `epochs`, `batch`, `imgsz` 等超参数。训练默认从 `yolo11n.pt` 预训练权重开始。
 
@@ -285,7 +284,7 @@ python main.py
 训练完成后得到 `.pt` 权重，使用 `onnx2engine.py` 一键导出为 TensorRT 引擎：
 
 ```bash
-python onnx2engine.py
+python3 onnx2engine.py
 ```
 
 该脚本自动调用 `model.export(format='engine', half=True, ...)`，生成固定尺寸（640/192/64）的 FP16 引擎。  
@@ -322,26 +321,6 @@ python onnx2engine.py
   - 当前飞镖瞄准目标（`target_cmd_id`）
   解析结果通过 `information_ui.py` 在 UI 面板上绘制。
 
----
-
-## 运行截图与调试
-
-- **主窗口**：实时显示检测框、装甲板分类、数字识别结果  
-  <p align="center">
-    <img src="images/screenshot_main.jpg" width="80%">
-  </p>
-
-- **地图界面**：敌方机器人位置（圆形）、速度矢量（箭头）、ID 标签  
-  <p align="center">
-    <img src="images/screenshot_map.jpg" width="80%">
-  </p>
-
-- **裁判信息面板**：血量条、双倍易伤指示、进度条等  
-  <p align="center">
-    <img src="images/screenshot_ui.jpg" width="40%">
-  </p>
-
-> 以上截图替换为您的实际运行画面，存放于 `V1/images/` 中即可。
 
 ---
 
