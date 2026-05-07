@@ -1,4 +1,3 @@
-
 # Radar26 Final · 面向 RoboMaster 2026 赛季的全自动雷达视觉与决策辅助系统
 
 ![Platform](https://img.shields.io/badge/platform-Linux--x86__64-blue)
@@ -27,8 +26,9 @@
 7. [模型训练与 TensorRT 导出](#模型训练与-tensorrt-导出)  
 8. [辅助工具与脚本](#辅助工具与脚本)  
 9. [串口通信协议](#串口通信协议)  
-10. [许可证](#许可证)  
-11. [致谢](#致谢)  
+10. [运行截图与调试](#运行截图与调试)  
+11. [许可证](#许可证)  
+12. [致谢](#致谢)  
 
 ---
 
@@ -68,11 +68,11 @@ graph TD
     B -->|裁剪ROI| C[装甲板检测器<br/>YOLOv11-192]
     C -->|二次裁剪| D[数字分类器<br/>YOLOv11-64]
     D --> E[拼接完整ID<br/>R1/B3...]
-    E --> F{依据掩码选择<br/>高度层变换矩阵}
-    F -->|地面| G1[地面矩阵 M_GROUND]
-    F -->|R型高地| G2[红色矩阵 M_HEIGHT_R]
-    F -->|环形高地| G3[绿色矩阵 M_HEIGHT_G]
-    G1 --> H[得到地图坐标 (x_map, y_map)]
+    E --> F{"依据掩码选择<br/>高度层变换矩阵"}
+    F -->|地面| G1["地面矩阵 M_GROUND"]
+    F -->|R型高地| G2["红色矩阵 M_HEIGHT_R"]
+    F -->|环形高地| G3["绿色矩阵 M_HEIGHT_G"]
+    G1 --> H["得到地图坐标 (x_map, y_map)"]
     G2 --> H
     G3 --> H
     H --> I[卡尔曼滤波更新 + 匈牙利匹配]
@@ -321,6 +321,27 @@ python onnx2engine.py
   - 双倍易伤触发状态（`vulnerability_cmd_id`）
   - 当前飞镖瞄准目标（`target_cmd_id`）
   解析结果通过 `information_ui.py` 在 UI 面板上绘制。
+
+---
+
+## 运行截图与调试
+
+- **主窗口**：实时显示检测框、装甲板分类、数字识别结果  
+  <p align="center">
+    <img src="images/screenshot_main.jpg" width="80%">
+  </p>
+
+- **地图界面**：敌方机器人位置（圆形）、速度矢量（箭头）、ID 标签  
+  <p align="center">
+    <img src="images/screenshot_map.jpg" width="80%">
+  </p>
+
+- **裁判信息面板**：血量条、双倍易伤指示、进度条等  
+  <p align="center">
+    <img src="images/screenshot_ui.jpg" width="40%">
+  </p>
+
+> 以上截图替换为您的实际运行画面，存放于 `V1/images/` 中即可。
 
 ---
 
