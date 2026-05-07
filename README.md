@@ -27,9 +27,8 @@
 7. [模型训练与 TensorRT 导出](#模型训练与-tensorrt-导出)  
 8. [辅助工具与脚本](#辅助工具与脚本)  
 9. [串口通信协议](#串口通信协议)  
-10. [运行截图与调试](#运行截图与调试)  
-11. [许可证](#许可证)  
-12. [致谢](#致谢)  
+10. [许可证](#许可证)  
+11. [致谢](#致谢)  
 
 ---
 
@@ -73,7 +72,9 @@ graph TD
     F -->|地面| G1[地面矩阵 M_GROUND]
     F -->|R型高地| G2[红色矩阵 M_HEIGHT_R]
     F -->|环形高地| G3[绿色矩阵 M_HEIGHT_G]
-    G1 & G2 & G3 --> H[得到地图坐标 (x_map, y_map)]
+    G1 --> H[得到地图坐标 (x_map, y_map)]
+    G2 --> H
+    G3 --> H
     H --> I[卡尔曼滤波更新 + 匈牙利匹配]
     I --> J[地图显示 + 盲区预测]
     I --> K[串口打包坐标发送]
@@ -320,27 +321,6 @@ python onnx2engine.py
   - 双倍易伤触发状态（`vulnerability_cmd_id`）
   - 当前飞镖瞄准目标（`target_cmd_id`）
   解析结果通过 `information_ui.py` 在 UI 面板上绘制。
-
----
-
-## 运行截图与调试
-
-- **主窗口**：实时显示检测框、装甲板分类、数字识别结果  
-  <p align="center">
-    <img src="images/screenshot_main.jpg" width="80%">
-  </p>
-
-- **地图界面**：敌方机器人位置（圆形）、速度矢量（箭头）、ID 标签  
-  <p align="center">
-    <img src="images/screenshot_map.jpg" width="80%">
-  </p>
-
-- **裁判信息面板**：血量条、双倍易伤指示、进度条等  
-  <p align="center">
-    <img src="images/screenshot_ui.jpg" width="40%">
-  </p>
-
-> 以上截图替换为您的实际运行画面，存放于 `V1/images/` 中即可。
 
 ---
 
