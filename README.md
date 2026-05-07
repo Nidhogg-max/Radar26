@@ -76,3 +76,49 @@ graph TD
     H --> I[卡尔曼滤波更新 + 匈牙利匹配]
     I --> J[地图显示 + 盲区预测]
     I --> K[串口打包坐标发送]
+---
+
+## 项目结构
+
+---
+
+Radar26_Final/
+├── V1/                           # 主工作目录
+│   ├── main.py                   # ★ 主程序入口
+│   ├── detect_function_yolov11.py # 检测器/分类器封装 (YOLOv11)
+│   ├── hik_camera.py             # 海康相机SDK封装 (Windows/Linux)
+│   ├── information_ui.py         # 裁判系统进度条绘制
+│   ├── guess_plt.py              # 盲区预测算法
+│   ├── train.py                  # 模型训练脚本
+│   ├── onnx2engine.py            # ONNX→TensorRT引擎导出
+│   ├── calibration.py            # 旧版标定UI (基于PyQt5)
+│   ├── biao.py                   # 9点标定矩阵计算
+│   ├── check.py                  # 标定点对可视化检查
+│   ├── map.py                    # 纯色地图生成工具
+│   ├── PNG_draw.py               # 地图掩码编辑器 (PyQt5)
+│   ├── devide.py                 # 数据集划分脚本
+│   ├── teat.py                   # 离线视频测试工具
+│   ├── NEXT-E_axis.py            # 盲区点位可视化
+│   ├── modelEEE/                 # ⚠️ 需自行准备模型文件
+│   │   ├── car_1280_best.engine  #   车体检测 TensorRT引擎
+│   │   ├── armorm_192_best.engine#   装甲板检测 TensorRT引擎
+│   │   ├── cls_64_best.engine    #   数字分类 TensorRT引擎
+│   │   └── *.pt / *.onnx         #   训练中间产物
+│   ├── images/                   # 地图与掩码资源
+│   │   ├── 2025map.png           # 战场地图 (2800x1500)
+│   │   ├── 2025map_red.png       # 红方视角地图
+│   │   ├── 2025map_blue.png      # 蓝方视角地图
+│   │   ├── 2025map_mask.png      # 蓝方高度层掩码
+│   │   ├── map_mask.jpg          # 红方高度层掩码
+│   │   └── test.mp4 / test.jpg   # 测试素材
+│   ├── arrays_test_red.npy       # 红方三维标定矩阵
+│   ├── arrays_test_blue.npy      # 蓝方三维标定矩阵
+│   ├── arrays_test.npy           # 地面层矩阵
+│   ├── yaml/                     # 数据集配置文件
+│   │   ├── car.yaml
+│   │   ├── armor.yaml
+│   │   └── armor_classify.yaml
+│   ├── RM_serial_py/             # 串口通信子模块
+│   ├── MvImport_Linux/           # 海康相机 Linux SDK 封装
+│   └── MvImport/                 # 海康相机 Windows SDK 封装
+└── README.md                     # 本文件
