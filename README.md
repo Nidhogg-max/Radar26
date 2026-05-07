@@ -86,7 +86,7 @@ graph TD
 ```
 Radar26_Final/
 ├── V1/                           # 主工作目录
-│   ├── main.py                   # ★ 主程序入口
+│   ├── main.py                   # 主程序入口
 │   ├── detect_function_yolov11.py # 检测器/分类器封装 (YOLOv11)
 │   ├── hik_camera.py             # 海康相机SDK封装 (Windows/Linux)
 │   ├── information_ui.py         # 裁判系统进度条绘制
@@ -101,11 +101,11 @@ Radar26_Final/
 │   ├── devide.py                 # 数据集划分脚本
 │   ├── teat.py                   # 离线视频测试工具
 │   ├── NEXT-E_axis.py            # 盲区点位可视化
-│   ├── modelEEE/                 # ⚠️ 需自行准备模型文件
-│   │   ├── car_1280_best.engine  #   车体检测 TensorRT引擎
-│   │   ├── armorm_192_best.engine#   装甲板检测 TensorRT引擎
-│   │   ├── cls_64_best.engine    #   数字分类 TensorRT引擎
-│   │   └── *.pt / *.onnx         #   训练中间产物
+│   ├── modelEEE/                 # 需自行准备模型文件
+│   │   ├── car_1280_best.engine  # 车体检测 TensorRT引擎
+│   │   ├── armorm_192_best.engine# 装甲板检测 TensorRT引擎
+│   │   ├── cls_64_best.engine    # 数字分类 TensorRT引擎
+│   │   └── *.pt / *.onnx         # 训练中间产物
 │   ├── images/                   # 地图与掩码资源
 │   │   ├── 2025map.png           # 战场地图 (2800x1500)
 │   │   ├── 2025map_red.png       # 红方视角地图
